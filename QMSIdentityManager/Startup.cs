@@ -2,11 +2,13 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using QMSIdentityManager.Data;
+using QMSIdentityManager.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,7 +29,16 @@ namespace QMSIdentityManager
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
-            services.AddIdentity<IdentityUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
+            services.AddIdentity<IdentityUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
+            services.AddTransient<IEmailSender, MailJetEmailSender>();
+            services.Configure<IdentityOptions>(opt =>
+            {
+                opt.Password.RequiredLength = 5;
+                opt.Password.RequireLowercase = true;
+                opt.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromSeconds(30);  //Login sayfasina redirect et
+                opt.Lockout.MaxFailedAccessAttempts = 3;
+                opt.SignIn.RequireConfirmedAccount = false;
+            });
             services.AddControllersWithViews();
         }
 
